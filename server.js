@@ -7,7 +7,7 @@ const bodyParser = require('express').json;
 const port = process.env.PORT || 8000;
 
 const UserRouter = require('./src/routes/user');
-// const GroupRouter = require('./src/routes/group');
+const GroupRouter = require('./src/routes/group');
 
 app.use(morgan("common"));
 app.use(cors());
@@ -22,7 +22,7 @@ app.get("/health-check", (req, res) => {
 });
 
 app.use('/user', UserRouter);
-// app.use('/group', GroupRouter);
+app.use('/group', GroupRouter);
 
 app.listen(port, () => {
     console.log(`Listening on ${port}`);

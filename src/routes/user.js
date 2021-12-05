@@ -7,7 +7,7 @@ require('dotenv').config();
 const pool = require('../model/db').pool;
 
 const GENDERS = ['MALE', 'FEMALE', 'OTHER', 'NA'];
-const JWT_EXPIRY = 3600 * 24;      // 1 day
+const JWT_EXPIRY = process.env.JWT_EXPIRY || '3h';      // 1 day
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'kjfksfsdjflkdsjflkjsdlfkjhsdlkfj@#*(&@*!^#&@gfdsfdsf';
 
 // let data = require('./data');
@@ -51,7 +51,7 @@ router.post("/signup", async (req, res) => {
   }
 
   try {
-    const records = await pool.query("SELECT * FROM User WHERE userName = ?", [userName]);
+    const records = await pool.query(`SELECT * FROM User WHERE userName = ?`, [userName]);
 
     if (records.length) {
       return res.json({
@@ -73,9 +73,9 @@ router.post("/signup", async (req, res) => {
       gender
     };
 
-    await pool.query("INSERT INTO User set ?", [newUser]);
+    await pool.query(`INSERT INTO User set ?`, [newUser]);
 
-    result = await pool.query("SELECT * FROM User WHERE userName = ?", [newUser.userName]);
+    result = await pool.query(`SELECT * FROM User WHERE userName = ?`, [newUser.userName]);
 
     if (result.length < 1) {
       return res.status(400).send({ errorMessage: "Error while inserting the record, please try again" });
@@ -131,7 +131,7 @@ router.post("/login", async (req, res) => {
 
   let isAuthorised = false;
   try {
-    record = await pool.query("SELECT * FROM User WHERE userName = ?", [userName]);
+    record = await pool.query(`SELECT * FROM User WHERE userName = ?`, [userName]);
     if (record.length < 1) {
       return res.status(400).json({
         status: "FAILED",

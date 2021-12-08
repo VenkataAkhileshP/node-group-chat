@@ -29,7 +29,7 @@ router.post("/create", async (req, res) => {
   }
 
   try {
-    const records = await pool.query(`SELECT * FROM Group WHERE name = ?`, [groupName]);
+    const records = await pool.query("SELECT * FROM `Group` WHERE `name` = ?", [groupName]);
 
     if (records.length) {
       return res.json({
@@ -48,9 +48,9 @@ router.post("/create", async (req, res) => {
       ownerId: tokenDecoded.id
     };
 
-    await pool.query(`INSERT INTO Group set ?`, [newGroup]);
+    await pool.query("INSERT INTO `Group` set ?", [newGroup]);
 
-    result = await pool.query(`SELECT * FROM Group WHERE name = ?`, [newGroup.name]);
+    result = await pool.query("SELECT * FROM `Group` WHERE `name` = ?", [newGroup.name]);
 
     if (result.length < 1 || !result[0] || !result[0].id) {
       return res.status(400).send({ errorMessage: "Error while inserting the record, please try again" });
@@ -64,7 +64,7 @@ router.post("/create", async (req, res) => {
       roleType: 'ADMIN'
     };
 
-    await pool.query(`INSERT INTO Group_Member set ?`, [newGroupMember]);
+    await pool.query("INSERT INTO `Group_Member` set ?", [newGroupMember]);
 
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });
@@ -90,7 +90,7 @@ router.delete("/:groupId", async (req, res) => {
     return res.status(400).send({ errorMessage: err.message });
   }
 
-  if (!authorization || !tokenDecoded || !tokenDecoded.id || !groupName ) {
+  if (!authorization || !tokenDecoded || !tokenDecoded.id || !groupId ) {
     return res.status(400).json({
       status: "FAILED",
       message: "Empty input fields!",
@@ -98,7 +98,7 @@ router.delete("/:groupId", async (req, res) => {
   }
 
   try {
-    const records = await pool.query(`SELECT * FROM Group WHERE id = ?`, [groupId]);
+    const records = await pool.query("SELECT * FROM `Group` WHERE `id` = ?", [groupId]);
 
     if (records.length < 1) {
       return res.json({
@@ -111,8 +111,9 @@ router.delete("/:groupId", async (req, res) => {
   }
 
   try {
-    await pool.query(`DELETE FROM Group WHERE id = ?`, [groupId]);
-    await pool.query(`DELETE FROM Group_Member WHERE groupId = ?`, [groupId]);
+    await pool.query("DELETE FROM `Message` WHERE `groupId` = ?", [groupId]);
+    await pool.query("DELETE FROM `Group_Member` WHERE `groupId` = ?", [groupId]);
+    await pool.query("DELETE FROM `Group` WHERE `id` = ?", [groupId]);
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });
   }
@@ -137,7 +138,7 @@ router.get("/groups", async (req, res) => {
     return res.status(400).send({ errorMessage: err.message });
   }
 
-  if (!authorization || !tokenDecoded || !tokenDecoded.id || !groupId || !userId || !roleType || !GROUP_ROLES.includes(roleType) ) {
+  if (!authorization || !tokenDecoded || !tokenDecoded.id) {
     return res.status(400).json({
       status: "FAILED",
       message: "Empty input fields!",
@@ -147,8 +148,8 @@ router.get("/groups", async (req, res) => {
   const userId = tokenDecoded.id;
 
   try {
-    const adminRecords = await pool.query(`SELECT * FROM Group_Member WHERE userId = ? AND roleType = ?`, [userId, 'ADMIN']);
-    const memberRecords = await pool.query(`SELECT * FROM Group_Member WHERE userId = ? AND roleType = ?`, [userId, 'MEMBER']);
+    const adminRecords = await pool.query("SELECT * FROM `Group_Member` WHERE `userId` = ? AND `roleType` = ?", [userId, 'ADMIN']);
+    const memberRecords = await pool.query("SELECT * FROM `Group_Member` WHERE `userId` = ? AND `roleType` = ?", [userId, 'MEMBER']);
 
     if (adminRecords.length < 1 && memberRecords.length < 1) {
       return res.json({
@@ -192,7 +193,7 @@ router.post("/addUser", async (req, res) => {
   }
 
   try {
-    const records = await pool.query(`SELECT * FROM Group WHERE id = ?`, [groupId]);
+    const records = await pool.query("SELECT * FROM `Group` WHERE `id` = ?", [groupId]);
 
     if (records.length < 1) {
       return res.json({
@@ -211,7 +212,7 @@ router.post("/addUser", async (req, res) => {
       roleType
     };
 
-    await pool.query(`INSERT INTO Group_Member set ?`, [newGroupMember]);
+    await pool.query("INSERT INTO `Group_Member` set ?", [newGroupMember]);
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });
   }
@@ -246,7 +247,7 @@ router.post("/:groupId/message/create", async (req, res) => {
   const userId = tokenDecoded.id;
 
   try {
-    const records = await pool.query(`SELECT * FROM Group_Member WHERE userId = ? AND groupId = ?`, [userId, groupId]);
+    const records = await pool.query("SELECT * FROM `Group_Member` WHERE `userId` = ? AND `groupId` = ?", [userId, groupId]);
 
     if (records.length < 1) {
       return res.json({
@@ -261,7 +262,7 @@ router.post("/:groupId/message/create", async (req, res) => {
       messageText: message
     };
 
-    await pool.query(`INSERT INTO Message set ?`, [newMessage])
+    await pool.query("INSERT INTO `Message` set ?", [newMessage])
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });
   }
@@ -297,7 +298,7 @@ router.post("/:messageId/liked", async (req, res) => {
       messageId,
       userId
     }
-    await pool.query("INSERT INTO Message_Liked set ?", [newReaction])
+    await pool.query("INSERT INTO `Message_Liked` set ?", [newReaction])
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });
   }
@@ -332,7 +333,7 @@ router.get("/:groupId", async (req, res) => {
   const userId = tokenDecoded.id;
 
   try {
-    const groupRecords = await pool.query(`SELECT * FROM Group WHERE id = ?`, [groupId]);
+    const groupRecords = await pool.query("SELECT * FROM `Group` WHERE `id` = ?", [groupId]);
 
     if (groupRecords.length < 1 || groupRecords[0] || groupRecords[0].id) {
       return res.json({
@@ -343,7 +344,7 @@ router.get("/:groupId", async (req, res) => {
 
     group = groupRecords[0];
 
-    const records = await pool.query(`SELECT * FROM Group_Member WHERE groupId = ?`, [groupId]);
+    const records = await pool.query("SELECT * FROM `Group_Member` WHERE `groupId` = ?", [groupId]);
 
     if (records.length < 1) {
       return res.json({
@@ -354,13 +355,13 @@ router.get("/:groupId", async (req, res) => {
 
     let groupAdminsRecords = records.filter((groupMember) => groupMember.roleType === 'ADMIN').filter((groupMember) => groupMember.userId).map((groupMember) => groupMember.userId);
     let groupAdminsRecordsStr = `(${groupAdminsRecords})`;
-    if (groupAdminsRecords.length) groupAdmins = await pool.query(`SELECT * FROM User WHERE id IN ?`, [groupAdminsRecordsStr]);
+    if (groupAdminsRecords.length) groupAdmins = await pool.query("SELECT * FROM `User` WHERE `id` IN ?", [groupAdminsRecordsStr]);
 
     let groupMembersRecords = records.filter((groupMember) => groupMember.roleType === 'MEMBER').filter((groupMember) => groupMember.userId).map((groupMember) => groupMember.userId);
     let groupMembersRecordsStr = `(${groupMembersRecords})`;
-    if (groupMembersRecords.length) groupMembers = await pool.query(`SELECT * FROM User WHERE id IN ?`, [groupMembersRecordsStr]);
+    if (groupMembersRecords.length) groupMembers = await pool.query("SELECT * FROM `User` WHERE `id` IN ?", [groupMembersRecordsStr]);
 
-    let groupMessageRecords = await pool.query(`SELECT * FROM Message WHERE groupId = ?`, [groupId]);
+    let groupMessageRecords = await pool.query("SELECT * FROM `Message` WHERE `groupId` = ?", [groupId]);
     if (groupMessageRecords.length) groupMessages = groupMessageRecords;
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });
@@ -399,7 +400,7 @@ router.get("/:messageId", async (req, res) => {
   const userId = tokenDecoded.id;
 
   try {
-    const messageRecords = await pool.query(`SELECT * FROM Message WHERE id = ?`, [messageId]);
+    const messageRecords = await pool.query("SELECT * FROM `Message` WHERE `id` = ?", [messageId]);
 
     if (messageRecords.length < 1 || messageRecords[0] || messageRecords[0].id) {
       return res.json({
@@ -410,12 +411,12 @@ router.get("/:messageId", async (req, res) => {
 
     message = messageRecords[0];
 
-    let likedUserRecords = await pool.query(`SELECT * FROM Message_Liked WHERE isLiked = ? and messageId = ?`, [1, messageId]);
+    let likedUserRecords = await pool.query("SELECT * FROM `Message_Liked` WHERE `isLiked` = ? and `messageId` = ?", [1, messageId]);
     likedUserRecords = likedUserRecords.filter((msg) => msg.userId).map((msg) => msg.userId);
 
     if (likedUserRecords.length) {
       let likedUserRecordsStr = `(${likedUserRecords})`;
-      likedUsers = await pool.query(`SELECT * FROM User WHERE id IN ?`, [likedUserRecordsStr]);
+      likedUsers = await pool.query("SELECT * FROM `User` WHERE `id` IN ?", [likedUserRecordsStr]);
     }
   } catch (err) {
     return res.status(400).send({ errorMessage: err.message });

@@ -18,7 +18,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health-check", (req, res) => {
-  return res.json({ status: "alive" });
+  return res.json({ status: "Alive" });
 });
 
 app.use('/user', UserRouter);
